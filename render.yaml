@@ -2,36 +2,44 @@ services:
   - type: web
     name: openclaw
     runtime: docker
-    # Standard (~2GB RAM) is too small for a ~1.5GB+ Node heap + proxy; Pro (~4GB) fits NODE_OPTIONS below.
-    plan: pro
+    plan: free
     healthCheckPath: /health
+
     envVars:
       - key: PORT
         value: "10000"
-      # Heap must stay below instance RAM (see https://render.com/docs/blueprint-spec#plan).
+
+      # Free Render has only 512 MB RAM.
+      # This may still be too small for some OpenClaw versions.
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=3072"
+        value: "--max-old-space-size=256"
+
+      # Use writable temporary directories because Free cannot attach a disk.
       - key: OPENCLAW_STATE_DIR
-        value: /data/.openclaw
+        value: /tmp/.openclaw
+
       - key: OPENCLAW_WORKSPACE_DIR
-        value: /data/workspace
+        value: /tmp/workspace
+
       - key: OPENCLAW_GATEWAY_TOKEN
         generateValue: true
-      # Primary AI providers (set at least one)
+
+      # Set at least one provider key.
       - key: ANTHROPIC_API_KEY
         sync: false
+
       - key: OPENAI_API_KEY
         sync: false
+
       - key: GEMINI_API_KEY
         sync: false
-      # Additional providers (optional)
+
+      # Optional providers
       - key: OPENROUTER_API_KEY
         sync: false
+
       - key: MOONSHOT_API_KEY
         sync: false
+
       - key: MINIMAX_API_KEY
         sync: false
-    disk:
-      name: openclaw-data
-      mountPath: /data
-      sizeGB: 5
